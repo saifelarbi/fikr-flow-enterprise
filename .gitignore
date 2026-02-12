@@ -1,0 +1,32 @@
+
+# Laravel
+/vendor/
+/node_modules/
+/.env
+/.env.local
+/storage/
+/bootstrap/cache/
+*.log
+.DS_Store
+
+# Next.js
+.next/
+out/
+node_modules/
+.env.local
+.env.*.local
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/

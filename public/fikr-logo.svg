@@ -1,0 +1,25 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cloud shape with circuit nodes -->
+  <defs>
+    <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B9DFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00D4FF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main cloud body -->
+  <path d="M 50 80 Q 40 70 50 60 Q 35 50 50 40 Q 70 30 90 40 Q 100 20 120 30 Q 140 25 140 45 Q 155 50 155 65 Q 165 75 155 85 Q 160 100 140 105 Q 120 115 100 110 Q 80 120 60 110 Q 40 105 50 90 Z" fill="url(#cloudGradient)" opacity="0.9"/>
+  
+  <!-- Circuit nodes and lines -->
+  <circle cx="60" cy="50" r="4" fill="#00D4FF" opacity="0.8"/>
+  <circle cx="100" cy="35" r="3" fill="#3B9DFF"/>
+  <circle cx="140" cy="50" r="4" fill="#00D4FF" opacity="0.8"/>
+  
+  <line x1="60" y1="50" x2="100" y2="35" stroke="#3B9DFF" stroke-width="1.5" opacity="0.6"/>
+  <line x1="100" y1="35" x2="140" y2="50" stroke="#00D4FF" stroke-width="1.5" opacity="0.6"/>
+  
+  <!-- Additional circuit elements -->
+  <circle cx="80" cy="70" r="3" fill="#3B9DFF"/>
+  <circle cx="120" cy="75" r="3" fill="#00D4FF"/>
+  <line x1="80" y1="70" x2="120" y2="75" stroke="#3B9DFF" stroke-width="1" opacity="0.5"/>
+</svg>

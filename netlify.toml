@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+  functions = "functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:8000/api/:splat"
+  status = 200
+  force = true
+
+[context.production]
+  environment = { NEXT_PUBLIC_API_URL = "http://localhost:8000/api" }
+
+[context.preview]
+  environment = { NEXT_PUBLIC_API_URL = "http://localhost:8000/api" }
+
+[context.deploy-preview]
+  environment = { NEXT_PUBLIC_API_URL = "http://localhost:8000/api" }

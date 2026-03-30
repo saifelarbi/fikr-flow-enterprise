@@ -89,12 +89,14 @@ class ApiClient {
   }
 
   // Expenses
-  async getExpenses(filters?: { category?: string; dateRange?: string }) {
+  async getExpenses(filters?: { category?: string; status?: string; date_from?: string; date_to?: string }) {
     let endpoint = '/expenses';
-    if (filters) {
+    if (filters && Object.keys(filters).length > 0) {
       const params = new URLSearchParams();
       if (filters.category) params.append('category', filters.category);
-      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.date_from) params.append('date_from', filters.date_from);
+      if (filters.date_to) params.append('date_to', filters.date_to);
       endpoint += `?${params.toString()}`;
     }
     return this.request(endpoint, 'GET');

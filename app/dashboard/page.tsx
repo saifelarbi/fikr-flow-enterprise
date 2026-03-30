@@ -1,49 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { apiClient } from '@/lib/api-client';
+import { useDashboardStats } from '@/lib/hooks/useDashboardStats';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, TrendingUp, TrendingDown, FileText, AlertCircle } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
-interface DashboardStats {
-  totalRevenue: number;
-  totalExpenses: number;
-  profit: number;
-  invoices: { buying: number; selling: number };
-  topExpenseCategory?: string;
-}
-
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const data = await apiClient.getDashboardStats();
-        setStats(data);
-      } catch (err) {
-        console.error('Failed to fetch stats:', err);
-        setError('Failed to load dashboard statistics');
-        // Mock data for demo when API is not available
-        setStats({
-          totalRevenue: 50000,
-          totalExpenses: 15000,
-          profit: 35000,
-          invoices: { buying: 10, selling: 15 },
-          topExpenseCategory: 'Salaries',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const { stats, loading, error } = useDashboardStats();
 
   if (loading) {
     return (
@@ -54,16 +18,14 @@ export default function DashboardPage() {
   }
 
   const chartData = [
-    { name: 'Revenue', value: stats?.totalRevenue || 0 },
-    { name: 'Expenses', value: stats?.totalExpenses || 0 },
+    { name: 'Revenue', value: stats?.revenue || 0 },
+    { name: 'Expenses', value: stats?.expenses || 0 },
   ];
 
-  const invoiceChartData = [
-    { name: 'Buying', value: stats?.invoices.buying || 0 },
-    { name: 'Selling', value: stats?.invoices.selling || 0 },
-  ];
+  const revenueChartData = stats?.revenueByType || [];
+  const expensesCategoryData = stats?.expensesByCategory || [];
 
-  const COLORS = ['#3b82f6', '#ef4444'];
+  const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
   return (
     <div className="space-y-8">
@@ -90,7 +52,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              ${(stats?.totalRevenue || 0).toLocaleString()}
+              ${(stats?.revenue || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-slate-400 mt-1">From all invoices</p>
           </CardContent>
@@ -103,7 +65,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              ${(stats?.totalExpenses || 0).toLocaleString()}
+              ${(stats?.expenses || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-slate-400 mt-1">All recorded expenses</p>
           </CardContent>
@@ -115,8 +77,8 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
-              ${(stats?.profit || 0).toLocaleString()}
+            <div className={`text-2xl font-bold ${(stats?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              ${(stats?.profit || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-slate-400 mt-1">Revenue - Expenses</p>
           </CardContent>
@@ -143,6 +105,7 @@ export default function DashboardPage() {
                     borderRadius: '8px',
                   }}
                   labelStyle={{ color: '#e2e8f0' }}
+                  formatter={(value: any) => `$${value.toFixed(2)}`}
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} />
               </BarChart>
@@ -150,20 +113,20 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Invoice Distribution */}
+        {/* Revenue by Type */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white">Invoice Distribution</CardTitle>
+            <CardTitle className="text-white">Revenue by Invoice Type</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={invoiceChartData}
+                  data={revenueChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
+                  label={({ type, value }) => `${type}: $${value.toFixed(0)}`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -179,12 +142,35 @@ export default function DashboardPage() {
                     borderRadius: '8px',
                   }}
                   labelStyle={{ color: '#e2e8f0' }}
+                  formatter={(value: any) => `$${value.toFixed(2)}`}
                 />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
+      {/* Expenses by Category */}
+      {expensesCategoryData.length > 0 && (
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Expenses by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {expensesCategoryData.map((item: any) => (
+                <div key={item.category} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-200 font-medium">{item.category}</p>
+                    <p className="text-sm text-slate-400">{item.count} expense(s)</p>
+                  </div>
+                  <p className="text-white font-bold">${item.value.toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Stats */}
       <Card className="bg-slate-800 border-slate-700">
@@ -197,28 +183,31 @@ export default function DashboardPage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-slate-400 text-sm">Total Invoices</p>
-              <p className="text-2xl font-bold text-white">
-                {(stats?.invoices.buying || 0) + (stats?.invoices.selling || 0)}
-              </p>
+              <p className="text-slate-400 text-sm">Total Clients</p>
+              <p className="text-2xl font-bold text-white">{stats?.totalClients || 0}</p>
             </div>
             <div>
-              <p className="text-slate-400 text-sm">Buying Invoices</p>
-              <p className="text-2xl font-bold text-white">{stats?.invoices.buying || 0}</p>
+              <p className="text-slate-400 text-sm">Pending Invoices</p>
+              <p className="text-2xl font-bold text-white">${(stats?.pendingInvoices || 0).toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-slate-400 text-sm">Selling Invoices</p>
-              <p className="text-2xl font-bold text-white">{stats?.invoices.selling || 0}</p>
+              <p className="text-slate-400 text-sm">Revenue Types</p>
+              <p className="text-2xl font-bold text-white">{revenueChartData.length}</p>
             </div>
             <div>
-              <p className="text-slate-400 text-sm">Top Expense</p>
-              <p className="text-2xl font-bold text-white truncate">
-                {stats?.topExpenseCategory || 'N/A'}
-              </p>
+              <p className="text-slate-400 text-sm">Expense Categories</p>
+              <p className="text-2xl font-bold text-white">{expensesCategoryData.length}</p>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Date Info */}
+      {stats && (
+        <div className="text-center text-sm text-slate-400">
+          <p>Data from {stats.dateFrom} to {stats.dateTo}</p>
+        </div>
+      )}
     </div>
   );
 }

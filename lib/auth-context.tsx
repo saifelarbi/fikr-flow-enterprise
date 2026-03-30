@@ -47,17 +47,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+      console.log('Login attempt to:', `${apiUrl}/auth/login`);
+      
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('Login response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Login failed');
+        const errorData = await response.json();
+        console.error('Login error response:', errorData);
+        throw new Error(errorData.message || 'Login failed');
       }
 
       const data = await response.json();
+      console.log('Login successful:', data);
+      
       setToken(data.token);
       setUser(data.user);
       
@@ -74,7 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (email: string, password: string, name: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8000/api/auth/signup', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
